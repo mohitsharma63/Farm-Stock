@@ -1,43 +1,39 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import {
-  insertCompanySchema, insertAccountMasterSchema, insertInventoryMasterSchema,
-  insertCustomerSchema, insertSupplierSchema, insertAccountingTransactionSchema,
-  insertInventoryTransactionSchema, insertColdStorageSchema, insertCrateSchema,
-  insertUserSchema
+import { 
+  insertCompanySchema,
+  insertAccountMasterSchema,
+  insertInventoryMasterSchema,
+  insertCustomerSchema,
+  insertSupplierSchema,
+  insertTransactionSchema,
+  insertStockTransactionSchema,
+  insertColdStorageUnitSchema,
+  insertColdStorageTransactionSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Dashboard metrics
-  app.get("/api/dashboard/metrics", async (req, res) => {
-    try {
-      const metrics = await storage.getDashboardMetrics();
-      res.json(metrics);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch dashboard metrics" });
-    }
-  });
-
-  // Companies routes
+  
+  // Company routes
   app.get("/api/companies", async (req, res) => {
     try {
-      const companies = await storage.getAllCompanies();
+      const companies = await storage.getCompanies();
       res.json(companies);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch companies" });
+      res.status(500).json({ message: "Failed to fetch companies" });
     }
   });
 
   app.get("/api/companies/:id", async (req, res) => {
     try {
-      const company = await storage.getCompany(parseInt(req.params.id));
+      const company = await storage.getCompany(req.params.id);
       if (!company) {
-        return res.status(404).json({ error: "Company not found" });
+        return res.status(404).json({ message: "Company not found" });
       }
       res.json(company);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch company" });
+      res.status(500).json({ message: "Failed to fetch company" });
     }
   });
 
@@ -47,141 +43,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const company = await storage.createCompany(validatedData);
       res.status(201).json(company);
     } catch (error) {
-      res.status(400).json({ error: "Invalid company data" });
+      res.status(400).json({ message: "Invalid company data" });
     }
   });
 
   app.put("/api/companies/:id", async (req, res) => {
     try {
       const validatedData = insertCompanySchema.partial().parse(req.body);
-      const company = await storage.updateCompany(parseInt(req.params.id), validatedData);
+      const company = await storage.updateCompany(req.params.id, validatedData);
       if (!company) {
-        return res.status(404).json({ error: "Company not found" });
+        return res.status(404).json({ message: "Company not found" });
       }
       res.json(company);
     } catch (error) {
-      res.status(400).json({ error: "Invalid company data" });
+      res.status(400).json({ message: "Invalid company data" });
     }
   });
 
   app.delete("/api/companies/:id", async (req, res) => {
     try {
-      const success = await storage.deleteCompany(parseInt(req.params.id));
-      if (!success) {
-        return res.status(404).json({ error: "Company not found" });
+      const deleted = await storage.deleteCompany(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Company not found" });
       }
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: "Failed to delete company" });
+      res.status(500).json({ message: "Failed to delete company" });
     }
   });
 
   // Account Master routes
-  app.get("/api/account-master", async (req, res) => {
+  app.get("/api/account-masters", async (req, res) => {
     try {
-      const accounts = await storage.getAllAccountMaster();
+      const accounts = await storage.getAccountMasters();
       res.json(accounts);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch accounts" });
+      res.status(500).json({ message: "Failed to fetch account masters" });
     }
   });
 
-  app.post("/api/account-master", async (req, res) => {
+  app.post("/api/account-masters", async (req, res) => {
     try {
       const validatedData = insertAccountMasterSchema.parse(req.body);
       const account = await storage.createAccountMaster(validatedData);
       res.status(201).json(account);
     } catch (error) {
-      res.status(400).json({ error: "Invalid account data" });
+      res.status(400).json({ message: "Invalid account master data" });
     }
   });
 
-  app.put("/api/account-master/:id", async (req, res) => {
+  app.put("/api/account-masters/:id", async (req, res) => {
     try {
       const validatedData = insertAccountMasterSchema.partial().parse(req.body);
-      const account = await storage.updateAccountMaster(parseInt(req.params.id), validatedData);
+      const account = await storage.updateAccountMaster(req.params.id, validatedData);
       if (!account) {
-        return res.status(404).json({ error: "Account not found" });
+        return res.status(404).json({ message: "Account master not found" });
       }
       res.json(account);
     } catch (error) {
-      res.status(400).json({ error: "Invalid account data" });
+      res.status(400).json({ message: "Invalid account master data" });
     }
   });
 
-  app.delete("/api/account-master/:id", async (req, res) => {
+  app.delete("/api/account-masters/:id", async (req, res) => {
     try {
-      const success = await storage.deleteAccountMaster(parseInt(req.params.id));
-      if (!success) {
-        return res.status(404).json({ error: "Account not found" });
+      const deleted = await storage.deleteAccountMaster(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Account master not found" });
       }
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: "Failed to delete account" });
+      res.status(500).json({ message: "Failed to delete account master" });
     }
   });
 
   // Inventory Master routes
-  app.get("/api/inventory-master", async (req, res) => {
+  app.get("/api/inventory-masters", async (req, res) => {
     try {
-      const items = await storage.getAllInventoryMaster();
+      const items = await storage.getInventoryMasters();
       res.json(items);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch inventory items" });
+      res.status(500).json({ message: "Failed to fetch inventory masters" });
     }
   });
 
-  app.get("/api/inventory-master/low-stock", async (req, res) => {
-    try {
-      const items = await storage.getLowStockItems();
-      res.json(items);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch low stock items" });
-    }
-  });
-
-  app.post("/api/inventory-master", async (req, res) => {
+  app.post("/api/inventory-masters", async (req, res) => {
     try {
       const validatedData = insertInventoryMasterSchema.parse(req.body);
       const item = await storage.createInventoryMaster(validatedData);
       res.status(201).json(item);
     } catch (error) {
-      res.status(400).json({ error: "Invalid inventory data" });
+      res.status(400).json({ message: "Invalid inventory master data" });
     }
   });
 
-  app.put("/api/inventory-master/:id", async (req, res) => {
+  app.put("/api/inventory-masters/:id", async (req, res) => {
     try {
       const validatedData = insertInventoryMasterSchema.partial().parse(req.body);
-      const item = await storage.updateInventoryMaster(parseInt(req.params.id), validatedData);
+      const item = await storage.updateInventoryMaster(req.params.id, validatedData);
       if (!item) {
-        return res.status(404).json({ error: "Inventory item not found" });
+        return res.status(404).json({ message: "Inventory master not found" });
       }
       res.json(item);
     } catch (error) {
-      res.status(400).json({ error: "Invalid inventory data" });
+      res.status(400).json({ message: "Invalid inventory master data" });
     }
   });
 
-  app.delete("/api/inventory-master/:id", async (req, res) => {
+  app.delete("/api/inventory-masters/:id", async (req, res) => {
     try {
-      const success = await storage.deleteInventoryMaster(parseInt(req.params.id));
-      if (!success) {
-        return res.status(404).json({ error: "Inventory item not found" });
+      const deleted = await storage.deleteInventoryMaster(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Inventory master not found" });
       }
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: "Failed to delete inventory item" });
+      res.status(500).json({ message: "Failed to delete inventory master" });
     }
   });
 
-  // Customers routes
+  // Customer routes
   app.get("/api/customers", async (req, res) => {
     try {
-      const customers = await storage.getAllCustomers();
+      const customers = await storage.getCustomers();
       res.json(customers);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch customers" });
+      res.status(500).json({ message: "Failed to fetch customers" });
     }
   });
 
@@ -191,42 +178,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const customer = await storage.createCustomer(validatedData);
       res.status(201).json(customer);
     } catch (error) {
-      res.status(400).json({ error: "Invalid customer data" });
+      res.status(400).json({ message: "Invalid customer data" });
     }
   });
 
   app.put("/api/customers/:id", async (req, res) => {
     try {
       const validatedData = insertCustomerSchema.partial().parse(req.body);
-      const customer = await storage.updateCustomer(parseInt(req.params.id), validatedData);
+      const customer = await storage.updateCustomer(req.params.id, validatedData);
       if (!customer) {
-        return res.status(404).json({ error: "Customer not found" });
+        return res.status(404).json({ message: "Customer not found" });
       }
       res.json(customer);
     } catch (error) {
-      res.status(400).json({ error: "Invalid customer data" });
+      res.status(400).json({ message: "Invalid customer data" });
     }
   });
 
   app.delete("/api/customers/:id", async (req, res) => {
     try {
-      const success = await storage.deleteCustomer(parseInt(req.params.id));
-      if (!success) {
-        return res.status(404).json({ error: "Customer not found" });
+      const deleted = await storage.deleteCustomer(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Customer not found" });
       }
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: "Failed to delete customer" });
+      res.status(500).json({ message: "Failed to delete customer" });
     }
   });
 
-  // Suppliers routes
+  // Supplier routes
   app.get("/api/suppliers", async (req, res) => {
     try {
-      const suppliers = await storage.getAllSuppliers();
+      const suppliers = await storage.getSuppliers();
       res.json(suppliers);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch suppliers" });
+      res.status(500).json({ message: "Failed to fetch suppliers" });
     }
   });
 
@@ -236,157 +223,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const supplier = await storage.createSupplier(validatedData);
       res.status(201).json(supplier);
     } catch (error) {
-      res.status(400).json({ error: "Invalid supplier data" });
+      res.status(400).json({ message: "Invalid supplier data" });
     }
   });
 
   app.put("/api/suppliers/:id", async (req, res) => {
     try {
       const validatedData = insertSupplierSchema.partial().parse(req.body);
-      const supplier = await storage.updateSupplier(parseInt(req.params.id), validatedData);
+      const supplier = await storage.updateSupplier(req.params.id, validatedData);
       if (!supplier) {
-        return res.status(404).json({ error: "Supplier not found" });
+        return res.status(404).json({ message: "Supplier not found" });
       }
       res.json(supplier);
     } catch (error) {
-      res.status(400).json({ error: "Invalid supplier data" });
+      res.status(400).json({ message: "Invalid supplier data" });
     }
   });
 
   app.delete("/api/suppliers/:id", async (req, res) => {
     try {
-      const success = await storage.deleteSupplier(parseInt(req.params.id));
-      if (!success) {
-        return res.status(404).json({ error: "Supplier not found" });
+      const deleted = await storage.deleteSupplier(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Supplier not found" });
       }
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: "Failed to delete supplier" });
+      res.status(500).json({ message: "Failed to delete supplier" });
     }
   });
 
-  // Accounting Transactions routes
-  app.get("/api/accounting-transactions", async (req, res) => {
+  // Transaction routes
+  app.get("/api/transactions", async (req, res) => {
     try {
-      const transactions = await storage.getAllAccountingTransactions();
+      const transactions = await storage.getTransactions();
       res.json(transactions);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch accounting transactions" });
+      res.status(500).json({ message: "Failed to fetch transactions" });
     }
   });
 
-  app.post("/api/accounting-transactions", async (req, res) => {
+  app.post("/api/transactions", async (req, res) => {
     try {
-      const validatedData = insertAccountingTransactionSchema.parse(req.body);
-      const transaction = await storage.createAccountingTransaction(validatedData);
+      const validatedData = insertTransactionSchema.parse(req.body);
+      const transaction = await storage.createTransaction(validatedData);
       res.status(201).json(transaction);
     } catch (error) {
-      res.status(400).json({ error: "Invalid transaction data" });
+      res.status(400).json({ message: "Invalid transaction data" });
     }
   });
 
-  // Inventory Transactions routes
-  app.get("/api/inventory-transactions", async (req, res) => {
+  // Stock Transaction routes
+  app.get("/api/stock-transactions", async (req, res) => {
     try {
-      const transactions = await storage.getAllInventoryTransactions();
+      const transactions = await storage.getStockTransactions();
       res.json(transactions);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch inventory transactions" });
+      res.status(500).json({ message: "Failed to fetch stock transactions" });
     }
   });
 
-  app.post("/api/inventory-transactions", async (req, res) => {
+  app.post("/api/stock-transactions", async (req, res) => {
     try {
-      const validatedData = insertInventoryTransactionSchema.parse(req.body);
-      const transaction = await storage.createInventoryTransaction(validatedData);
+      const validatedData = insertStockTransactionSchema.parse(req.body);
+      const transaction = await storage.createStockTransaction(validatedData);
       res.status(201).json(transaction);
     } catch (error) {
-      res.status(400).json({ error: "Invalid transaction data" });
+      res.status(400).json({ message: "Invalid stock transaction data" });
     }
   });
 
-  // Cold Storage routes
-  app.get("/api/cold-storage", async (req, res) => {
+  // Cold Storage Unit routes
+  app.get("/api/cold-storage-units", async (req, res) => {
     try {
-      const coldStorage = await storage.getAllColdStorage();
-      res.json(coldStorage);
+      const units = await storage.getColdStorageUnits();
+      res.json(units);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch cold storage data" });
+      res.status(500).json({ message: "Failed to fetch cold storage units" });
     }
   });
 
-  app.post("/api/cold-storage", async (req, res) => {
+  app.post("/api/cold-storage-units", async (req, res) => {
     try {
-      const validatedData = insertColdStorageSchema.parse(req.body);
-      const coldStorageItem = await storage.createColdStorage(validatedData);
-      res.status(201).json(coldStorageItem);
+      const validatedData = insertColdStorageUnitSchema.parse(req.body);
+      const unit = await storage.createColdStorageUnit(validatedData);
+      res.status(201).json(unit);
     } catch (error) {
-      res.status(400).json({ error: "Invalid cold storage data" });
+      res.status(400).json({ message: "Invalid cold storage unit data" });
     }
   });
 
-  // Crates routes
-  app.get("/api/crates", async (req, res) => {
+  // Cold Storage Transaction routes
+  app.get("/api/cold-storage-transactions", async (req, res) => {
     try {
-      const crates = await storage.getAllCrates();
-      res.json(crates);
+      const transactions = await storage.getColdStorageTransactions();
+      res.json(transactions);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch crates" });
+      res.status(500).json({ message: "Failed to fetch cold storage transactions" });
     }
   });
 
-  app.post("/api/crates", async (req, res) => {
+  app.post("/api/cold-storage-transactions", async (req, res) => {
     try {
-      const validatedData = insertCrateSchema.parse(req.body);
-      const crate = await storage.createCrate(validatedData);
-      res.status(201).json(crate);
+      const validatedData = insertColdStorageTransactionSchema.parse(req.body);
+      const transaction = await storage.createColdStorageTransaction(validatedData);
+      res.status(201).json(transaction);
     } catch (error) {
-      res.status(400).json({ error: "Invalid crate data" });
-    }
-  });
-
-  // User Management routes
-  app.get("/api/users", async (req, res) => {
-    try {
-      const users = await storage.getAllUsers();
-      res.json(users);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch users" });
-    }
-  });
-
-  app.post("/api/users", async (req, res) => {
-    try {
-      const validatedData = insertUserSchema.parse(req.body);
-      const user = await storage.createUser(validatedData);
-      res.status(201).json(user);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid user data" });
-    }
-  });
-
-  app.put("/api/users/:id", async (req, res) => {
-    try {
-      const validatedData = insertUserSchema.partial().parse(req.body);
-      const user = await storage.updateUser(parseInt(req.params.id), validatedData);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      res.json(user);
-    } catch (error) {
-      res.status(400).json({ error: "Invalid user data" });
-    }
-  });
-
-  app.delete("/api/users/:id", async (req, res) => {
-    try {
-      const success = await storage.deleteUser(parseInt(req.params.id));
-      if (!success) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: "Failed to delete user" });
+      res.status(400).json({ message: "Invalid cold storage transaction data" });
     }
   });
 
